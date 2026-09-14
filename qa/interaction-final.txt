@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "checks": [
+    "SVG node deep navigation",
+    "No invented causal arrows for context recipe",
+    "Immediate mobile read action",
+    "Focus retained after mobile select",
+    "Main focus after route navigation"
+  ]
+}

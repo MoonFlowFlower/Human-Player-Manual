@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: synthetic transport shock affects only a 10% cost share, with adjustable pass-through
+ok 1 - synthetic transport shock affects only a 10% cost share, with adjustable pass-through
+  ---
+  duration_ms: 1.64631
+  type: 'test'
+  ...
+# Subtest: model clamps out-of-domain input and rejects NaN
+ok 2 - model clamps out-of-domain input and rejects NaN
+  ---
+  duration_ms: 0.164142
+  type: 'test'
+  ...
+# Subtest: progress enforces ordered validation; unknown quest IDs never pass
+ok 3 - progress enforces ordered validation; unknown quest IDs never pass
+  ---
+  duration_ms: 0.151934
+  type: 'test'
+  ...
+# Subtest: storage recovery tolerates broken JSON, null, arrays, and future schema
+ok 4 - storage recovery tolerates broken JSON, null, arrays, and future schema
+  ---
+  duration_ms: 0.748719
+  type: 'test'
+  ...
+# Subtest: valid persisted completion is restored; inconsistent completion is not
+ok 5 - valid persisted completion is restored; inconsistent completion is not
+  ---
+  duration_ms: 0.585129
+  type: 'test'
+  ...
+# Subtest: user notes cannot inject HTML into view templates
+ok 6 - user notes cannot inject HTML into view templates
+  ---
+  duration_ms: 0.175167
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 65.760277

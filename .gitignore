@@ -1,0 +1,8 @@
+node_modules/
+build/
+dist/
+*.log
+qa/*.png
+qa/*.json
+history.bundle
+.DS_Store

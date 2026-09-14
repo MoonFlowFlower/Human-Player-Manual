@@ -1,0 +1,82 @@
+
+> earth-player-manual@0.1.0 typecheck
+> tsc --noEmit
+
+
+> earth-player-manual@0.1.0 lint
+> tsc --noEmit && node scripts/lint.mjs
+
+Project source checks passed: no placeholders, empty links, inline handlers, dynamic evaluation or debug logging. Strict TypeScript checks run separately.
+
+> earth-player-manual@0.1.0 test
+> tsc && node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: synthetic transport shock affects only a 10% cost share, with adjustable pass-through
+ok 1 - synthetic transport shock affects only a 10% cost share, with adjustable pass-through
+  ---
+  duration_ms: 0.813836
+  type: 'test'
+  ...
+# Subtest: model clamps out-of-domain input and rejects NaN
+ok 2 - model clamps out-of-domain input and rejects NaN
+  ---
+  duration_ms: 0.206187
+  type: 'test'
+  ...
+# Subtest: progress enforces ordered validation; unknown quest IDs never pass
+ok 3 - progress enforces ordered validation; unknown quest IDs never pass
+  ---
+  duration_ms: 0.151311
+  type: 'test'
+  ...
+# Subtest: storage recovery tolerates broken JSON, null, arrays, and future schema
+ok 4 - storage recovery tolerates broken JSON, null, arrays, and future schema
+  ---
+  duration_ms: 1.462164
+  type: 'test'
+  ...
+# Subtest: valid persisted completion is restored; inconsistent completion is not
+ok 5 - valid persisted completion is restored; inconsistent completion is not
+  ---
+  duration_ms: 0.411488
+  type: 'test'
+  ...
+# Subtest: user notes cannot inject HTML into view templates
+ok 6 - user notes cannot inject HTML into view templates
+  ---
+  duration_ms: 0.221847
+  type: 'test'
+  ...
+# Subtest: specific price intent outranks a generic food alias
+ok 7 - specific price intent outranks a generic food alias
+  ---
+  duration_ms: 0.884401
+  type: 'test'
+  ...
+# Subtest: the content slice has valid edges, source references, and independent learning prerequisites
+ok 8 - the content slice has valid edges, source references, and independent learning prerequisites
+  ---
+  duration_ms: 1.048536
+  type: 'test'
+  ...
+# Subtest: serialized real observations keep their separate epistemic categories and size limit
+ok 9 - serialized real observations keep their separate epistemic categories and size limit
+  ---
+  duration_ms: 0.668959
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 70.628842
+
+> earth-player-manual@0.1.0 build
+> node scripts/build.mjs
+
+Built 9 scoped modules. Offline HTML: 128.4 KB, gzip 39.0 KB. No fonts or external assets bundled.

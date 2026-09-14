@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "consoleErrors": [],
+  "method": "Production offline HTML injected with Playwright set_content; no URL navigation or policy changes",
+  "viewports": [
+    "1440x900",
+    "390x844"
+  ],
+  "checks": [
+    "home rendered from built offline artifact",
+    "atlas selection, mouse drag, zoom/reset, keyboard pan and node focus",
+    "atlas to guide navigation",
+    "task-aware search, recipe mapping, honest unknown and Escape",
+    "ordered complete loop, wrong-answer recovery, hidden prediction, live variables, draft retention and same-session progress",
+    "progress deletion requires confirmation; cancel preserves data",
+    "unknown route fallback",
+    "mobile focused explorer, guide, quest, search and no page overflow at 390x844",
+    "reduced-motion rendering and navigation"
+  ],
+  "unverified": [
+    "Native localStorage across reload or browser restart",
+    "Hosted URL and real file:// navigation; environment policy blocks all navigation",
+    "Human learning outcomes and real-user usability"
+  ]
+}

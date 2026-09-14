@@ -1,0 +1,17 @@
+{
+  "name": "earth-player-manual",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An experience-first, local-first field guide to real-world systems.",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit && node scripts/lint.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "tsc && node --test tests/*.test.mjs",
+    "preview": "node scripts/dev.mjs --dist"
+  },
+  "devDependencies": { "typescript": "5.8.3" },
+  "engines": { "node": ">=22" }
+}
