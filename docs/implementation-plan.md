@@ -1,6 +1,12 @@
-# EARTH vertical slice implementation
+# 本轮实现范围
 
-1. Establish typed content, graph and progress invariants. Test broken edges, cyclic/invalid prerequisites, search intent matching, unknown queries, synthetic cost calculation, progress prerequisites, and corrupted storage. Run failing tests before implementing model behavior.
-2. Implement one coherent visual system and home/atlas/guide/quest/search views. Keep body content out of rendering logic, and all user-originated output escaped. Use deterministic graph layout and typed edges; use native keyboard-accessible controls.
-3. Connect the learning loop. Reading, checked understanding and self-reported observation remain distinct; do not unlock completion from a click alone. Save and restore only validated, versioned state. Do not claim verification of the user's real-world observation.
-4. Run browser tests on the production bundle. Capture both viewport sizes, inspect actual images, repair visual/interaction defects, then repeat. Run final tests/typecheck/lint/build, record exact limits, and package source plus a double-click offline HTML. Local Git checkpoints at each coherent milestone.
+现有 TypeScript/CSS/SVG 应用内增量修改，不重建项目或技术栈。详细执行清单见 `superpowers/plans/2026-09-14-foundation-entry.md`。
+
+1. 用回归测试覆盖首页六方向、口语搜索、独立旧练习和新旧记录隔离。
+2. 增加七篇经来源核对的基础章节、方向引用与学习关系类型；保留世界内容与旧深链接。
+3. 重接首页、导航、文章、下一步、搜索、知识地图与练习入口，调整桌面和移动阅读。
+4. 实现回忆—对照—应用—反馈—继续/复习的完整过程，分别记录各类行为。
+5. 运行工程检查和实际浏览器流程；HTTP 模式单独验证原生刷新/存储，不用离线注入结果代替。
+6. 修改分支提交与 PR 交付，不自动合并 main；远端文件、CI 与网站部署分别核实。
+
+旧的三阶段面包任务不再定义全站结构；三个练习可分别尝试，旧笔记原键保留。

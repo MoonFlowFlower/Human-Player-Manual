@@ -1,67 +1,74 @@
 # EARTH — Player Manual
 
-现实世界玩家手册。不是百科换皮，而是从一个现实问题，看见它背后的系统、关系和可检验解释。
+现实世界玩家手册。理解生活，也理解世界怎样运转。
 
-首轮只做“一块面包的旅程”：**12 个互联系统、2 个预设问题配方、3 个任务阶段**。交互、信息架构、视觉和学习闭环优先于条目数量。
+首页以**人生知识路线图**为入口：照顾自己、学习与判断、独立生活、人际合作、理解世界、做选择。前两个方向优先展示，可以并行阅读；其他方向连接已完成的内容，未完成主题只有说明，没有空文章入口。
 
-## 直接看效果
+## 本轮可以体验什么
 
-源码仓库通过 GitHub Actions 自动验证，并可从 `main` 分支构建后部署到 GitHub Pages。下载交付包如果包含 `dist/`，可直接用浏览器打开 `dist/EARTH-player-manual.html`；它是自包含的离线 HTML，无需账户或 API Key，查看外部来源才需要联网。
+基础章节共七篇：睡眠与休息、吃饭与活动、安排注意力、从看懂到会做、回忆与复习、判断信息、怎样求助。睡眠和记忆内容区分日常尝试与需要医疗评估的情况，默认面向普通成年读者。
 
-也可在项目目录运行以下命令，通过本机 HTTP 预览现成构建（仅需要 Node.js 22 或以上）：
+一条可以在站内走完的练习：读借伞示例 → 收起原文回忆 → 自己对照三个要点 → 换个情境应用 → 查看错误解释并重试 → 继续读记忆章节或加入稍后复习。自由文字由读者对照，不伪装成 AI 评分；完成只表示做过这次练习。
 
-```sh
-node scripts/dev.mjs --dist
-```
+已有的面包、物流、价格及其知识地图仍在「看懂世界怎样运转」中。`#guide/food`、`#guide/prices`、`#quests/trace` 等旧链接继续有效；`#guide` 本身现在打开学习路线。知识地图展示现实系统关系，不作为学习关卡。
 
-随后打开 `http://127.0.0.1:4173`。不要直接双击根目录的 `index.html`：根文件使用原生 ES modules，供 HTTP 服务使用；离线单文件是 `dist/EARTH-player-manual.html`。
+## 开发与构建
 
-浏览器存储可用时，进度与观察草稿只保存在本地。禁用存储或配额不足时退化为当前会话；清除浏览器数据会删除记录。文件模式下的持久性因浏览器而异，需用目标浏览器确认。
-
-## 开发与验证
-
-技术栈是原生 TypeScript + CSS + SVG，没有运行时依赖。唯一开发依赖为锁定版本 TypeScript 5.8.3。
+保持原生 **TypeScript + CSS + SVG**，没有应用运行时依赖。Node.js 22 或以上，开发依赖锁定 TypeScript 5.8.3。
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
-开发服务启动时编译一次，不包含热更新。修改源代码后，在另一终端运行 `npx tsc --watch` 并手动刷新；修改 CSS 不需编译。
+打开 `http://127.0.0.1:4173`。开发服务启动时编译一次；修改 TypeScript 后需重新编译，可另开终端运行 `npx tsc --watch`。CSS 修改后刷新即可。
 
 ```sh
 npm run typecheck
 npm run lint
 npm test
 npm run build
+node scripts/dev.mjs --dist
 ```
 
-`lint` 是严格 TypeScript 检查加项目级源码规则，不是完整 ESLint 或无障碍审计。`build` 同时生成原生 ESM 静态站和独立离线 HTML。离线链接器只支持当前项目的命名静态 import/export；遇到不支持的语法会停止构建。
+`lint` 是严格类型检查加项目级源码规则，不是完整 ESLint 或无障碍审计。`build` 输出 `dist/` 静态站与 `dist/EARTH-player-manual.html` 自包含离线页面；没有引入新技术栈。离线链接器仍只支持本项目的命名静态 import/export。
 
-交付环境已实际运行全套命令，使用的是环境中现成的 TypeScript 5.8.3。没有在该环境中完成从 npm 注册表重新安装依赖的验证。
+## 浏览器回归
 
-## 一条完整路线
+```sh
+python -m pip install playwright==1.57.0
+python -m playwright install chromium
+# 先在另一终端启动上面的 --dist 服务：
+python qa/browser_check.py --base-url http://127.0.0.1:4173
+python qa/interaction_regressions.py
+```
 
-首页 → 提出现实问题 → 图集高亮相关系统 → 打开机制说明 → 回到现场任务 → 先预测再揭示教学模型 → 错误解释与重试 → 写下观察、推断、未知 → 完成并进入下一条自由探索关系。
+`CHROMIUM_PATH` 可指定现成 Chromium。导航受限制的环境可运行 `python qa/browser_check.py --offline`，在新页面中加载构建后的独立 HTML；该模式**不验证 HTTP、原生刷新或 localStorage 持久化**。它不会修改浏览器管理策略。
 
-地图的物品流、支持关系、可能反馈，与学习前置条件分开建模。价格问题不是单一因果链。所有文章始终可读；阅读不等于掌握。现实观察标为“本人报告，未独立核验”。
+`qa/results/` 保存报告与 1440×900、390×844 截图，不进入源码版本。Verify 工作流执行工程检查、真实 HTTP 浏览器流程并上传构建/QA 产物。详见 [验证说明](docs/qa-report.md)。
 
-快捷键：`Ctrl/Cmd + K` 搜索，方向键选择结果，`Enter` 打开，`Esc` 关闭。地图支持拖动、缩放、复位，以及获得焦点后的方向键平移、`+/-` 缩放、`0` 复位。移动端使用独立的聚焦节点浏览器。
+## 内容与状态的位置
 
-## 修改内容与界面
+| 文件 | 用途 |
+|---|---|
+| `src/learning-content.ts` | 基础章节、六个方向、具名来源、学习关系与练习数据 |
+| `src/content.ts` | 保留的世界系统、物品/支持/反馈关系、面包与价格问题 |
+| `src/learning-model.ts` | 方向上下文、下一篇、学习状态校验、回忆练习完成条件 |
+| `src/learning-ui.ts` / `src/practice.ts` | 路线/章节与回忆练习界面 |
+| `src/atlas.ts` / `src/guide.ts` / `src/quests.ts` | 保留的知识地图、世界条目与独立小练习 |
+| `src/model.ts` / `src/search.ts` | 共享本地检索、人工别名、旧记录校验与搜索交互 |
+| `src/app.ts` / `src/ui.ts` / `style.css` | 导航、共享界面与原有视觉语言 |
 
-- `src/content.ts`：12 个概念、来源、关系、问题配方，以及任务顺序与标题。
-- `src/types.ts`、`src/model.ts`：类型、索引、搜索排序、模型计算、进度校验。
-- `src/atlas.ts`、`guide.ts`、`search.ts`：三种访问同一份内容的视图。
-- `src/quests.ts`、`experiment.ts`：三阶段任务及教学实验；当前问题表单为明确的手工设计，不是通用题库。
-- `src/app.ts`、`ui.ts`、`style.css`：导航、共享界面、视觉系统。
+详细结构与兼容策略见 [内容模型](docs/content-model.md)。
 
-详见 `docs/content-model.md`。增加条目不需复制 UI。当前未实现云同步、CMS、实时 AI、通用问答、账号或千级图谱加载；不是做好的功能被隐藏。
+## 本地记录与隐私
 
-## 验证范围与交付状态
+新记录使用 `earth-player-manual.learning.v2`，旧面包记录仍使用 `earth-player-manual.v1`。不把旧任务完成映射成新课已读或练习完成；新章节操作不重写旧记录。已读、已跳过、练习完成、笔记草稿与观察提交分别表示对应行为。
 
-见 `docs/qa-report.md`。浏览器检查执行了构建后的真实 HTML/JS，但当前环境的管理策略禁止一切 URL 导航，因此使用 Playwright `set_content` 加载生产文件，不更改策略。桌面/移动布局、图谱交互、搜索、任务闭环、会话内状态和草稿均有检查；**原生跨刷新持久化、真实 file:// 打开、上线后的访问与人类学习效果尚未验证**。
+笔记不由本站上传，没有账号、数据库、云同步或 AI 接口。禁用存储或配额不足时退为当前会话，并显示提示；清理浏览器数据会删除记录。网页内有单条笔记删除、旧练习重置和全部记录删除，均有确认或明确作用范围。不要填写病史、地址或账户资料。
 
-仓库保留了首轮 vertical slice 的 Git 检查点。`.github/workflows/verify.yml` 会在 push / PR 时执行类型检查、源码检查、测试与生产构建；`.github/workflows/pages.yml` 会在 `main` 更新后构建 `dist/` 并部署 GitHub Pages。
+## 发布
 
-静态部署时发布 `dist` 目录即可。若平台要求 `index.html`，使用 `dist/index.html` 并保留相邻 `build/` 与 `style.css`；也可将独立 HTML 复制为另一空部署目录的 `index.html`。首次使用 GitHub Pages 时，需要在仓库 Settings → Pages 中将发布源设为 **GitHub Actions**。
+`.github/workflows/verify.yml` 对 PR、main 更新执行验证；`.github/workflows/pages.yml` 仅在 main 更新或手动触发时部署 `dist/` 到 GitHub Pages。修改分支与 PR 本身**不会自动替换公开网站**。
+
+GitHub Pages 发布源应为 **GitHub Actions**。代码提交、远端内容、Verify 结果与 Pages 部署结果是不同状态，需要分别查看。静态站资源均使用相对路径，兼容 `/Human-Player-Manual/` 子路径。

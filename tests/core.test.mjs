@@ -13,10 +13,10 @@ test('model clamps out-of-domain input and rejects NaN', () => {
   assert.equal(projectPrice(-20, 100), 100);
   assert.equal(projectPrice(NaN, 100), 100);
 });
-test('progress enforces ordered validation; unknown quest IDs never pass', () => {
+test('legacy exercises are independent; unknown quest IDs never pass', () => {
   assert.equal(canComplete('trace', []), true);
-  assert.equal(canComplete('predict', []), false);
-  assert.equal(canComplete('observe', ['trace']), false);
+  assert.equal(canComplete('predict', []), true);
+  assert.equal(canComplete('observe', ['trace']), true);
   assert.equal(canComplete('observe', ['trace', 'predict']), true);
   assert.equal(canComplete('invented', []), false);
 });
@@ -25,13 +25,13 @@ test('storage recovery tolerates broken JSON, null, arrays, and future schema', 
     assert.deepEqual(decodeProgress(input).completed, []);
   }
 });
-test('valid persisted completion is restored; inconsistent completion is not', () => {
+test('valid legacy completions are preserved without inventing new completions', () => {
   const good = decodeProgress(JSON.stringify({version:1, completed:['trace','predict'], visited:['energy'], notes:{observe:'a package label'}}));
   assert.deepEqual(good.completed, ['trace','predict']);
   assert.deepEqual(good.visited, ['energy']);
   assert.equal(good.notes.observe, 'a package label');
   const bad = decodeProgress(JSON.stringify({version:1,completed:['observe','trace','fake','trace'],visited:['energy',false,'evil']}));
-  assert.deepEqual(bad.completed, ['trace']);
+  assert.deepEqual(bad.completed, ['trace','observe']);
   assert.deepEqual(bad.visited, ['energy']);
 });
 test('user notes cannot inject HTML into view templates', () => {

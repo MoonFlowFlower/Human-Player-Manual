@@ -1,61 +1,70 @@
-# 内容与关系模型
+# 内容与记录模型
 
-## Concept：不是一段塞在组件里的正文
+## 两种入口，共享内容引用
 
-`src/types.ts` 定义 `Concept`；实际内容位于 `src/content.ts`。字段包括稳定的 `id`、中英文标题、分类、摘要、存在原因、带来源的事实概括、机制解释、输入/过程/输出、建议前置理解、失败模式、常见误解、练习问题、来源 ID、地区边界和链接核查日期。`x/y` 是当前小图集的确定性布局坐标。
+- 学习路线回答「现在学什么」。`Direction.readings` 是建议阅读顺序，引用 `{kind:'chapter'|'concept', id}`，不复制正文。
+- 知识地图回答「事物怎样联系」。继续使用 `Concept` 与 `Edge`；当前地图只画已有世界系统，不把生活章节伪装成物品流节点。
+- 基础章节在 `Chapter` 中，以情境、机制、例子、尝试、适用条件和来源组织。栏目可按内容调整，不要求套用世界条目的输入输出结构。
+- `relatedReadings()` 根据同一份关联数据，在新章节、旧世界文章与地图详情中提供双向入口。
 
-新增概念时：提供所有必填字段；选一个独立、不变化的 ID；将来源记录加入 `sources` 并在概念内引用其 ID；添加有明确含义的关系；运行测试、构建并检查两个视口。不要为了视觉填满画面而增加未完成条目。
+所有实际入口必须引用已存在内容。`Direction.planned` 只渲染无链接的主题说明，没有占位文章。添加章节时更新索引与验证，不另外维护搜索正文副本。
 
-每条记录的 `fact` 以 FACT 展示并链接到对应来源集合。`mechanism`、关系线与练习属于编辑建模，不能因为旁边有来源就冒充该来源的原文或定论。来源包含 `publisher/title/url/scope/checked`，地区规则的适用范围写入 `scope` 与 `jurisdiction`。链接已查阅不等于专业同行审查。
+## 关系不是解锁条件
 
-## Edge：世界里的关系
+`Edge.type`：`flow`（物品流）、`support`（支持）、`feedback`（可能反馈）。
+
+`LearningRelation.type`：`recommended`（建议顺序）、`prerequisite`（真正前置知识）、`related`（相关阅读）。使用 `chapter:sleep` / `concept:food` 等具名引用。当前基础路线没有强制前置条件，推荐顺序不限制访问。
+
+旧 `Concept.prerequisites` 实际表示阅读建议，现更名为 `recommendedBefore`，避免把建议误作严格依赖。世界知识关系仍独立于学习推荐。价格问题使用 `relationMode:'context'`，不画成一条因果链。
+
+## 路由与继续阅读
+
+- `#home`、`#routes`、`#routes/study`：首页、总览、具体方向。
+- `#learn/memory?route=study`：基础章节与进入方向。`nextReading()` 按该方向找下一篇，结束时回到该方向。
+- 同一篇求助文章可被多个方向引用；在 `people` 中继续到劳动与协作，在 `care` 中回到照顾自己，而不是跳入食物主线。
+- `#guide/food` 等旧世界文章保留；无 id 的 `#guide` 打开路线总览。
+- `#practice` / `#practice/recall`：练习总览与回忆练习。旧 `#quests/trace|predict|observe` 均可直接进入，不再强制按三步解锁。
+- 非法 id 显示「没有找到这一页」，提供路线与搜索。
+
+`validLearningLocation()` 只保存已存在的章节/练习路径，不接受外部 URL；首页据此提供继续入口。搜索为本地检索，手工别名包括「睡不醒」「看完记不住」「不知道先学什么」，无结果时不生成答案。
+
+## 新学习状态
+
+存储键：`earth-player-manual.learning.v2`。
 
 ```ts
-interface Edge {
-  from: string;
-  to: string;
-  type: 'flow' | 'support' | 'feedback';
-  label: string;
+{
+  version: 2,
+  read: string[],       // 点击「标为已读并继续」
+  skipped: string[],    // 点击「跳过本节」，与已读去重
+  notes: { sleep?: string },
+  lastLocation: string,
+  reviewLater: boolean,
+  recall: {
+    stage: 'example'|'recall'|'compare'|'transfer'|'complete',
+    response: string,
+    comparison: ('included'|'missed'|'unsure')[],
+    answer: string,
+    attempts: number,
+    completed: boolean
+  }
 }
 ```
 
-`flow` 是物品交接，`support` 是支持关系，`feedback` 是可能的反馈。每条线都有实际文字标签；不能用一根无解释的连线代替因果证据。鼠标指向连线可读原生提示；侧栏和文字版关系提供替代入口。
+打开文章不会自动标为已读。睡眠记录必须显式保存；回忆输入保存草稿。完成练习必须有回忆文字、三个有效自我对照和正确的迁移判断，不能只改一个 completed 标志取得完成状态。自我对照不是自动判断文字，迁移题有确定规则与针对具体误解的反馈。
 
-`Concept.prerequisites` 则是建议学习顺序，与物品流分离。`unlocks` 由反向查询 prerequisites 得到，不维护另一份容易失配的数组。文章不设阅读锁。
+恢复时限制字符串长度、过滤未知 id、校验阶段前置行为、拒绝损坏 JSON 和错误版本。记录只代表行为，不推断健康改善或长期掌握。稍后复习只是本地入口，不调度通知。
 
-## Recipe：从问题查回系统
+## 旧数据兼容
 
-配方的 `aliases` 提供宽泛匹配，`intentTerms` 在排序时优先识别“变贵/涨价/来源”等明确的问题方向。它是可审查的人工词表，不是语义模型或实时 AI。
+保留原键 `earth-player-manual.v1`、原 version 1 和原 known note keys。**不跨版本映射完成状态，不自动清空旧笔记。** 新基础章节操作只写 v2；旧世界条目的「曾打开」与练习仍写 v1。写回 v1 时保留未知笔记字段，避免抹掉用户原有数据。
 
-`nodes` 引用同一份 Concept 索引。`relationMode='flow'` 的面包路径显示交接顺序；`relationMode='context'` 的价格问题只显示需要共同理解的系统集合，避免编造单一因果链。搜索不到时明确显示未收录。
+旧 completed 现在按有效 id 去重保留，不再强制裁成三步前缀，这是让三个旧练习可分别尝试的有意变更。未知任务仍不允许完成。睡眠记录删除只清除该条；旧练习重置只清除 v1；隐私页的全部删除才清除两键，均按界面确认操作执行。
 
-## Quest / Progress
+存储失败时显示会话模式；不把保存失败说成已持久保存。纯离线 HTML 在不同浏览器下的存储策略可能不同，不能由 HTTP 测试推断。
 
-三阶段顺序为 `trace → predict → observe`。任务顺序与短标题在 `content.ts`；每种交互的正文、表单与反馈在 `quests.ts`。目前是一个手工制作的闭环，不是通用任务编辑器。扩展多条路线之前应先抽出独立 Quest 内容结构，而不是复制整页组件。
+## 来源与安全
 
-状态为：
+来源含发布者、标题、URL、适用范围、实际查阅日期。健康章节以普通成年读者为默认，NHS 就诊方式、加拿大饮食资料分别注明地区。文章提供相关段落的资料跳转；较长说明放在资料列表/关于/隐私，不铺满每一屏。
 
-```ts
-interface Progress {
-  version: 1;
-  completed: string[];
-  visited: string[];
-  notes: Record<string, string>;
-}
-```
-
-`visited` 只表示阅读过。`completed` 只接受已知 ID 和符合顺序的连续前缀。`notes` 只接纳观察、推断、未知三栏，每栏最多 1600 字符。草稿输入即尝试保存；不会因为填写草稿而完成任务。渲染用户笔记前执行 HTML 转义。没有云端收集。
-
-两个教学判断可由程序核对；现实观察无法由程序核实，因此必须标为本人报告。清空记录需要明确确认。
-
-## 教学成本模型
-
-基准指数 100，运输部分 10，其他部分不变。输出为：
-
-`100 + 10 × 运输成本变化率 × 传递比例`
-
-份额全部是自编假设，不是 USDA 或市场调查数据。滑块只覆盖教学需要的非负变化，范围 0–100%。需求、替代、库存、利润和时间滞后等没有纳入。不能将结果用于现实定价或预测。
-
-## 扩展边界
-
-字段与视图分离，可以持续添加内容；但当前 SVG、客户端搜索与初始载荷只针对 12 节点验证，没有验证几千节点的性能。到达更大规模再根据实测采用分区加载、索引、局部子图等措施。第一轮不为假想规模搭建数据库、向量搜索或账户系统。
+日期表示编辑时查阅，不等于临床、教育或同行审核；例子与价格模型的参数明确为编写的教学假设。公开内容不得取用用户私人健康或身份资料。没有对应交互练习的世界条目保留思考题，不提供指向不相关面包练习的按钮。
