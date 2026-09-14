@@ -1,0 +1,30 @@
+name: Review bundle
+
+on:
+  push:
+    branches: ["feat/foundation-learning-entry"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Archive checked-out source
+        run: git archive --format=tar HEAD -o "$RUNNER_TEMP/repository.tar"
+      - name: Capture current public homepage
+        continue-on-error: true
+        run: |
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --timeout=15000 --window-size=1440,900 --screenshot="$RUNNER_TEMP/live-desktop.png" https://moonflowflower.github.io/Human-Player-Manual/
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --timeout=15000 --window-size=390,844 --screenshot="$RUNNER_TEMP/live-mobile.png" https://moonflowflower.github.io/Human-Player-Manual/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: review-source-and-live-baseline
+          path: |
+            ${{ runner.temp }}/repository.tar
+            ${{ runner.temp }}/live-*.png
+          retention-days: 7
+          if-no-files-found: error
