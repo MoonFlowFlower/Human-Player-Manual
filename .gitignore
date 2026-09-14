@@ -6,3 +6,5 @@ qa/*.png
 qa/*.json
 history.bundle
 .DS_Store
+
+qa/results/

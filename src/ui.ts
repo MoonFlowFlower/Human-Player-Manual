@@ -1,6 +1,8 @@
 import { conceptIndex, safeText } from './model.js';
 import { concepts, edges } from './content.js';
-import type { Progress } from './types.js';
+import { directions } from './learning-content.js';
+import { emptyLearning, locationLabel, validLearningLocation } from './learning-model.js';
+import type { Progress, LearningProgress } from './types.js';
 
 const iconPaths: Record<string,string> = {
   compass:'<circle cx="12" cy="12" r="8"/><path d="M12 0v7m0 10v7M0 12h7m10 0h7m-9-15-5 10-5 2 5-10z"/>',
@@ -31,7 +33,7 @@ const iconPaths: Record<string,string> = {
 };
 export function icon(name: string, size=20): string { return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name]??iconPaths.info}</svg>`; }
 export function nodeLink(id: string): string { const c=conceptIndex.get(id); return c?`<a class="inline-node" href="#guide/${id}">${icon(c.icon,15)}${safeText(c.title)}${icon('diagonal',12)}</a>`:''; }
-export function statusText(progress: Progress,id: string): string { return progress.visited.includes(id)?'已探索':'尚未探索'; }
+export function statusText(progress: Progress,id: string): string { return progress.visited.includes(id)?'曾打开':'未打开'; }
 export function pageHeader(kicker: string,title: string,sub: string): string { return `<div class="page-heading"><div><p class="eyebrow">${kicker}</p><h1>${title}</h1></div><p class="heading-aside">${sub}</p></div>`; }
 export function must<T extends Element = HTMLElement>(root: ParentNode, selector: string): T { const el=root.querySelector<T>(selector); if(!el) throw new Error(`Missing UI element: ${selector}`); return el; }
 export function announce(message: string): void { const el=document.getElementById('toast'); if(!el) return; el.textContent=message; el.classList.add('visible'); window.setTimeout(()=>el.classList.remove('visible'),3200); }
@@ -58,21 +60,18 @@ export function homeDrawing(): string {
     <g class="orbit-guides" fill="none" stroke="currentColor" stroke-width=".8"><circle cx="445" cy="312" r="287" stroke-dasharray="2 8"/><path d="M445 8v616M10 312h900" stroke-dasharray="3 7"/><path d="M35 25h22m-11-11v22M867 25h22m-11-11v22M35 604h22m-11-11v22M867 604h22m-11-11v22"/></g>
     <g class="hero-flow" fill="none" stroke="currentColor" stroke-width="1.5">${links}</g>
     ${concepts.filter(c=>['energy','water','agriculture','processing','transport','retail','food'].includes(c.id)).map(c=>`<a href="#atlas" data-home-node="${c.id}" aria-label="探索${c.title}"><g class="hero-map-node ${c.id==='food'?'hero-food':''}" transform="translate(${c.x},${c.y})"><circle r="${c.id==='food'?43:23}"/><g transform="translate(-12,-12)">${icon(c.icon,24)}</g><text x="0" y="${c.id==='food'?64:44}" text-anchor="middle">${c.title}</text><text class="hero-label-en" x="0" y="${c.id==='food'?80:57}" text-anchor="middle">${c.en}</text></g></a>`).join('')}
-    <text class="diagram-coordinate" x="58" y="55">SYSTEMS, NOT SILOS.</text><text class="diagram-coordinate" x="58" y="590">FIG. 01 — A WORLD IN A LOAF</text><text class="diagram-coordinate" x="848" y="590" text-anchor="end">N ↗</text>
+    <text class="diagram-coordinate" x="58" y="55">生产与生活的联系</text><text class="diagram-coordinate" x="58" y="590">面包的相关环节</text><text class="diagram-coordinate" x="848" y="590" text-anchor="end">N ↗</text>
   </svg>`;
 }
 
-export function homePage(progress: Progress): string {
- return `<main id="main" class="home" tabindex="-1">
-   <section class="home-main"><div class="hero-copy">
-     <p class="eyebrow"><span class="tiny-dot"></span> THE MISSING TUTORIAL</p>
-     <h1>EARTH<span class="title-period">.</span></h1>
-     <p class="hero-edition">A PLAYER’S MANUAL FOR THE REAL WORLD</p>
-     <h2>世界的规则，<br>从此有迹可循。</h2>
-     <p class="hero-description">你出生在这个世界，却没有收到说明书。<br>从熟悉的事物出发，看见隐藏的系统，<br>理解它们如何连接，也找到自己的下一步。</p>
-     <div class="hero-actions"><a class="button primary" href="#atlas">展开世界地图 ${icon('arrow')}</a><a class="text-link" href="#quests/${progress.completed.length===0?'trace':progress.completed.length===1?'predict':'observe'}">${progress.completed.length?'继续你的探索':'从一块面包开始'} ${icon('diagonal',16)}</a></div>
-     <div class="hero-stats"><span><b>12</b> 互联系统</span><span><b>03</b> 现场任务</span><span><b>01</b> 起始路线</span></div>
-   </div><div class="hero-visual"><div class="plate-heading"><span>PLATE 001</span><span>THE EVERYDAY / RECONSIDERED</span></div>${homeDrawing()}<p class="diagram-caption"><span class="tiny-dot"></span> 一块面包的背后，藏着多少个世界？<span class="mono">EXPLORE THE CONNECTIONS ↗</span></p></div></section>
-   <section class="home-route"><div class="route-section-index">01 <span>/ FIRST EXPEDITION</span></div><div class="route-intro"><h2>从餐桌开始，<br>读懂更大的世界。</h2><p>不必先学完整个世界。<br>跟着一个真实问题，走完一次发现。</p></div><div class="route-steps"><a href="#atlas" data-recipe="bread"><span>01</span><div><strong>展开关系</strong><small>食物从哪里来，又依赖什么？</small></div>${icon('diagonal')}</a><a href="#quests/predict"><span>02</span><div><strong>试着预测</strong><small>改变一个变量，看看影响如何传递。</small></div>${icon('diagonal')}</a><a href="#quests/observe"><span>03</span><div><strong>返回现实</strong><small>区分观察、推断和还不知道的部分。</small></div>${icon('diagonal')}</a></div></section>
- </main>`;
+export function notFoundPage(): string {
+ return `<main id="main" class="page not-found" tabindex="-1"><p class="eyebrow">页面未找到</p><h1>没有找到这一页</h1><p>链接可能不完整，或这一页已经移动。</p><div class="hero-actions"><a class="button primary" href="#routes">查看学习路线 ${icon('arrow')}</a><button class="button" data-search>搜索内容 ${icon('search')}</button></div></main>`;
+}
+export function routeBoard(): string {
+ return `<div class="route-board"><div class="board-heading"><span>学习方向</span><span>从眼下需要的地方开始</span></div><ol class="direction-board">${directions.map((d,i)=>`<li class="direction-cell ${i<2?'foundation-direction':''}"><a class="direction-entry" href="#routes/${d.id}"><span class="direction-number">${d.number}</span><div><h2>${d.title}</h2><p>${d.summary}</p><small>${d.topics}</small></div>${icon('diagonal',18)}</a>${i===0?'<div class="direction-shortcuts"><a href="#learn/sleep?route=care">睡眠与休息 →</a><a href="#learn/meals?route=care">吃饭与活动 →</a></div>':i===1?'<div class="direction-shortcuts"><a href="#learn/practice?route=study">从看懂到会做 →</a><a href="#learn/memory?route=study">回忆与复习 →</a></div>':''}</li>`).join('')}</ol><p class="board-caption">生活基础和学习方法可以一起学，也可以直接选择其他方向。</p></div>`;
+}
+export function homePage(progress: Progress, learning: LearningProgress = emptyLearning()): string {
+ const resume = validLearningLocation(learning.lastLocation);
+ const legacy = !resume && progress.completed.length > 0;
+ return `<main id="main" class="home foundation-home" tabindex="-1"><section class="foundation-hero"><div class="foundation-copy"><p class="eyebrow"><span class="tiny-dot"></span> EARTH — PLAYER MANUAL</p><h1>现实世界<br><span>玩家手册</span></h1><p class="foundation-deck">睡眠、学习、工作、人际关系……<br>把生活中重要的事，一件件弄明白。</p><div class="hero-actions"><a class="button primary" href="#routes">看看从哪里开始 ${icon('arrow')}</a><button class="text-link" data-search>查一个问题 ${icon('search',17)}</button></div>${resume?`<a class="resume-reading" href="#${resume}"><small>继续上次</small><strong>${safeText(locationLabel(resume))}</strong>${icon('arrow',18)}</a>`:legacy?'<a class="resume-reading" href="#quests"><small>之前的练习记录还在</small><strong>查看面包与价格练习 →</strong></a>':''}${learning.reviewLater?'<a class="review-reminder" href="#practice/recall">稍后复习：收起原文，试着回忆 →</a>':''}<div class="hero-margin-note"><span class="margin-rule"></span><p>先选一个具体问题。<br>读一读，再试一小步。</p></div></div>${routeBoard()}</section><section class="learning-invitation"><div><p class="eyebrow">可以在这里试一遍</p><h2>看懂了，<br>离开原文还能想起来吗？</h2></div><div><p>读一个简短例子，收起原文试着回忆。<br>对照遗漏，再换个情境用一次。</p><a class="button primary" href="#practice/recall">开始回忆练习 ${icon('arrow')}</a><a class="text-link" href="#learn/practice?route=study">先读「从看懂到会做」 ${icon('diagonal',16)}</a></div></section></main>`;
 }
