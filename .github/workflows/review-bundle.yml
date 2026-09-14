@@ -1,30 +1,84 @@
-name: Review bundle
+name: Import verified review source
 
 on:
   push:
     branches: ["feat/foundation-learning-entry"]
-  workflow_dispatch:
+    paths: ["qa/.foundation-transfer/ready"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  bundle:
+  import:
+    if: github.ref == 'refs/heads/feat/foundation-learning-entry'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-      - name: Archive checked-out source
-        run: git archive --format=tar HEAD -o "$RUNNER_TEMP/repository.tar"
-      - name: Capture current public homepage
-        continue-on-error: true
+        with:
+          ref: feat/foundation-learning-entry
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Validate exact base and result blobs before applying source
         run: |
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --timeout=15000 --window-size=1440,900 --screenshot="$RUNNER_TEMP/live-desktop.png" https://moonflowflower.github.io/Human-Player-Manual/
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --timeout=15000 --window-size=390,844 --screenshot="$RUNNER_TEMP/live-mobile.png" https://moonflowflower.github.io/Human-Player-Manual/
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, pathlib, subprocess
+          folder = pathlib.Path('qa/.foundation-transfer')
+          manifest = json.loads((folder/'ready').read_text())
+          parts = []
+          for i, expected in enumerate(manifest['chunks']):
+              text = (folder/f'part-{i}').read_text().strip()
+              actual = hashlib.sha256(text.encode()).hexdigest()
+              assert actual == expected, f'Transfer part {i} checksum mismatch: {actual}'
+              parts.append(text)
+          raw = lzma.decompress(base64.b64decode(''.join(parts), validate=True))
+          assert hashlib.sha256(raw).hexdigest() == manifest['sha256'], 'Payload checksum mismatch'
+          data = json.loads(raw)
+          def blob(value):
+              return hashlib.sha1(b'blob '+str(len(value)).encode()+b'\0'+value).hexdigest()
+          updates = {}
+          for name, change in data.items():
+              path = pathlib.Path(name)
+              assert not path.is_absolute() and '..' not in path.parts and not path.is_symlink(), name
+              assert name in ['.gitignore','README.md','index.html','style.css'] or path.parts[0] in ['src','tests','docs','qa'], name
+              assert '.foundation-transfer' not in path.parts, name
+              old = path.read_bytes() if path.exists() else b''
+              assert (blob(old) if path.exists() else None) == change['base'], f'Concurrent base change: {name}'
+              text = old.decode('utf-8')
+              end = 0
+              for start, stop, replacement in change['edits']:
+                  assert end <= start <= stop <= len(text) and isinstance(replacement,str), name
+                  end = stop
+              for start, stop, replacement in reversed(change['edits']):
+                  text = text[:start]+replacement+text[stop:]
+              result = text.encode('utf-8')
+              assert blob(result) == change['result'], f'Result differs from tested file: {name}'
+              updates[path] = result
+          for path, result in updates.items():
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(result)
+          subprocess.run(['git','add','--',*map(str,updates)],check=True)
+          subprocess.run(['git','rm','-r','--','qa/.foundation-transfer'],check=True)
+          print(f'Applied {len(updates)} exact tested source files; transfer files removed.')
+          PY
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Commit verified source without rewriting history
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: add foundation learning roadmap, sourced chapters and recall practice'
+          git push origin HEAD:refs/heads/feat/foundation-learning-entry
+      - name: Capture committed source for verification
+        run: git archive --format=tar HEAD -o "$RUNNER_TEMP/source-after-import.tar"
       - uses: actions/upload-artifact@v4
         with:
-          name: review-source-and-live-baseline
-          path: |
-            ${{ runner.temp }}/repository.tar
-            ${{ runner.temp }}/live-*.png
+          name: imported-reviewed-source
+          path: ${{ runner.temp }}/source-after-import.tar
           retention-days: 7
           if-no-files-found: error
